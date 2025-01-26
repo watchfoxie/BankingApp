@@ -1,5 +1,7 @@
 package guis;
 
+import db_objs.User;
+
 import javax.swing.*;
 /*
     Crearea unei clase abstracte ne ajută să stabilim modelul pe care îl va urma GUIS-ul nostru, de exemplu,
@@ -7,7 +9,16 @@ import javax.swing.*;
     care va fi unic pentru fiecare subclasă.
  */
 public abstract class BaseFrame extends JFrame {
+    // Stocarea informațiilor despre utilizator
+    protected User user;
+
     public BaseFrame(String title) {
+        initialize(title);
+    }
+
+    public BaseFrame(String title, User user){
+        // Inițializarea utilizatorului
+        this.user = user;
         initialize(title);
     }
 

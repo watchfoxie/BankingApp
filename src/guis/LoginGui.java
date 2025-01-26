@@ -1,7 +1,12 @@
 package guis;
 
+import db_objs.User;
+import db_objs.MyJDBC;
+
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /*
     Acest GUI va permite utilizatorului să se conecteze sau să lanseze GUI-ul de înregistrare
@@ -60,6 +65,38 @@ public class LoginGui extends BaseFrame{
         JButton loginButton = new JButton("Autentificare");
         loginButton.setBounds(20, 460, getWidth() - 50, 40);
         loginButton.setFont(new Font("Dialog", Font.BOLD, 20));
+        loginButton.addActionListener(new ActionListener(){
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+               // Obținem username
+               String username = usernameField.getText();
+
+               // Obținem parola
+               String password = String.valueOf(passwordField.getPassword());
+
+               // Validarea autentificării
+                User user = MyJDBC.validateLogin(username, password);
+
+               // Dacă utilizatorul este nul, înseamnă invalid, altfel este un cont valid
+               if(user != null){
+                   // Înseamnă autentificare validă
+
+                   // Eliminarea acestui GUI
+                   LoginGui.this.dispose();
+
+                   // Lansarea GUI al aplicației bancare
+                   BankingAppGui bankingAppGui = new BankingAppGui(user);
+                   bankingAppGui.setVisible(true);
+
+                   // Afișarea dialogului de succes
+                   JOptionPane.showMessageDialog(bankingAppGui, "Autentificare reușită!");
+               }else{
+                   // Autentificare invalidă
+                   JOptionPane.showMessageDialog(LoginGui.this, "Autentificare nereușită!");
+               }
+            }
+        });
         add(loginButton);
 
         // Crearea etichetei de înregistrare
