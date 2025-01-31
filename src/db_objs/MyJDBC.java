@@ -12,7 +12,7 @@ public class MyJDBC {
     // Configurarea bazei de date
     private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/bankapp";
     private static final String DB_USERNAME = "root";
-    private static final String DB_PASSWORD = "1111";
+    private static final String DB_PASSWORD = "mt67521124";
 
     // Dacă este valid, returnează un obiect cu informațiile utilizatorului
     public static User validateLogin(String username, String password){

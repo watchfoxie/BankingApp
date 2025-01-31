@@ -7,6 +7,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /*
     Acest GUI va permite utilizatorului să se conecteze sau să lanseze GUI-ul de înregistrare
@@ -104,6 +106,15 @@ public class LoginGui extends BaseFrame{
         registerLabel.setBounds(0, 510, getWidth() - 10, 30);
         registerLabel.setFont(new Font("Dialog", Font.PLAIN, 20));
         registerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        // Adaugă un ascultător de evenimente astfel încât, atunci când se face clic pe mouse, se va lansa ghidul de înregistrare
+        registerLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // Eliminare GUI
+            }
+        });
+
         add(registerLabel);
     }
 }
