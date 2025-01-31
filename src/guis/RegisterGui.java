@@ -1,7 +1,11 @@
 package guis;
 
+import db_objs.MyJDBC;
+
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class RegisterGui extends BaseFrame{
     public RegisterGui(){
@@ -68,6 +72,44 @@ public class RegisterGui extends BaseFrame{
         JButton registerButton = new JButton("Înregistrare");
         registerButton.setBounds(20, 460, getWidth() - 50, 40);
         registerButton.setFont(new Font("Dialog", Font.BOLD, 20));
+        registerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Obținerea numelui de utilizator
+                String username = usernameField.getText();
+
+                // Obținerea parolei
+                String password = String.valueOf(passwordField.getPassword());
+
+                // Obținerea parolei repetate
+                String rePassword = String.valueOf(rePasswordField.getPassword());
+
+                // Va trebui să validăm datele introduse de utilizator
+                if(validateUserInput(username, password, rePassword)){
+                    // Încercarea de a înregistra utilizatorul în baza de date
+                    if(MyJDBC.register(username, password)){
+                        // Înregistrare reușită
+                        // Eliminarea acestui GUI
+                        RegisterGui.this.dispose();
+
+                        // Lansarea GUI-ului de autentificare
+                        LoginGui loginGui = new LoginGui();
+                        loginGui.setVisible(true);
+
+                        // Crearea unui dialog privind rezultatele
+                        JOptionPane.showMessageDialog(loginGui, "Cont înregistrat cu succes!");
+                    }else{
+                        // Înregistrare eșuată
+                        JOptionPane.showMessageDialog(RegisterGui.this, "Eroare: Utilizator deja înregistrat!");
+                    }
+                }else{
+                    // Introducere utilizator invalidă
+                    JOptionPane.showMessageDialog(RegisterGui.this,
+                            "Eroare: Numele de utilizator trebuie să aibă cel puțin 6 caractere\n" +
+                            "și/sau parola trebuie să corespundă pentru ambele casete");
+                }
+            }
+        });
         add(registerButton);
 
         // Crearea etichetei de autentificare
@@ -76,5 +118,19 @@ public class RegisterGui extends BaseFrame{
         loginLabel.setFont(new Font("Dialog", Font.PLAIN, 20));
         loginLabel.setHorizontalAlignment(SwingConstants.CENTER);
         add(loginLabel);
+    }
+
+    private boolean validateUserInput(String username, String password, String rePassword){
+        // Toate câmpurile trebuie să aibă o valoare
+        if(username.length() == 0 || password.length() == 0 || rePassword.length() == 0) return false;
+
+        // Numele de utilizator trebuie să aibă cel puțin 6 caractere
+        if(username.length() < 6) return false;
+
+        // Parola și reintroducerea parolii trebuie să fie aceleași
+        if(!password.equals(rePassword)) return false;
+
+        // Trece validarea
+        return true;
     }
 }

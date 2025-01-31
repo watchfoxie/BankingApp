@@ -53,4 +53,52 @@ public class MyJDBC {
         // Utilizator invalid
         return null;
     }
+
+    // Înregistrarea unui nou utilizator în baza de date
+    // true - înregistrarea reușește, false - înregistrarea eșuează
+    public static boolean register(String username, String password){
+        try{
+            // Mai întâi va trebui să verificăm dacă numele de utilizator a fost deja luat
+            if(!checkUser(username)){
+                Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+
+                PreparedStatement preparedStatement = connection.prepareStatement(
+                        "INSERT INTO users(username, password)" +
+                                "VALUES(?, ?)"
+                );
+
+                preparedStatement.setString(1, username);
+                preparedStatement.setString(2, password);
+
+                preparedStatement.executeUpdate();
+                return true;
+            }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // Verifică dacă numele de utilizator există deja în baza de date
+    // true - utilizatorul există, false - utilizatorul nu există
+    private static boolean checkUser(String username){
+        try{
+            Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+
+            PreparedStatement preparedStatement = connection.prepareStatement(
+                    "SELECT * FROM users WHERE username = ?"
+            );
+
+            preparedStatement.setString(1, username);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            // Acest lucru înseamnă că interogarea nu a returnat date, ceea ce înseamnă că numele de utilizator este disponibil
+            if(!resultSet.next()){
+                return false;
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        return true;
+    }
 }
