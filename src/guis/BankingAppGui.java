@@ -96,6 +96,32 @@ public class BankingAppGui extends BaseFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        new BankingAppDialog(this, user).setVisible(true);
+        String buttonPressed = e.getActionCommand();
+
+        // Utilizatorul a apăsat (Ieșire)
+        if(buttonPressed.equalsIgnoreCase("Ieșire")){
+            // Returnează utilizatorul la interfața grafică de conectare
+            new LoginGui().setVisible(true);
+
+            // Eliminarea acestei interfețe grafice
+            this.dispose();
+
+            // Executarea restului cod
+            return;
+        }
+
+        // Alte funcții
+        BankingAppDialog bankingAppDialog = new BankingAppDialog(this, user);
+
+        // Setează titlul antetului dialogului la acțiune
+        bankingAppDialog.setTitle(buttonPressed);
+
+        // Dacă butonul apăsat este depozit, retragere sau transfer
+        if(buttonPressed.equalsIgnoreCase("Depozit") || buttonPressed.equalsIgnoreCase("Retragere")
+            || buttonPressed.equalsIgnoreCase("Transfer")){
+            // Adăugarea în fereastra de dialog a componentelor GUI (sold curent și sumă)
+            bankingAppDialog.addCurrentBalanceAndAmount();
+            bankingAppDialog.setVisible(true);
+        }
     }
 }

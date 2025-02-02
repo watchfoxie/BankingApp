@@ -3,6 +3,7 @@ package guis;
 import db_objs.User;
 
 import javax.swing.*;
+import java.awt.*;
 
 /*
     Afișează un dialog personalizat pentru aplicația noastră BankingAppGui
@@ -11,6 +12,9 @@ import javax.swing.*;
 public class BankingAppDialog extends JDialog {
     private User user;
     private BankingAppGui bankingAppGui;
+    private JLabel balanceLabel;
+    private JLabel enterAmountLabel;
+    private JTextField enterAmountField;
 
     public BankingAppDialog(BankingAppGui bankingAppGui, User user){
         // Setarea dimensiunii
@@ -36,6 +40,28 @@ public class BankingAppDialog extends JDialog {
 
         // Vom avea nevoie de acces la informațiile despre utilizator pentru a face actualizări în baza noastră de date sau pentru a prelua date despre utilizator
         this.user = user;
+    }
 
+    public void addCurrentBalanceAndAmount(){
+        // Eticheta soldului curent
+        balanceLabel = new JLabel("Resurse financiare: MDL" + user.getCurrentBalance());
+        balanceLabel.setBounds(0, 10, getWidth() - 20, 20);
+        balanceLabel.setFont(new Font("Dialog", Font.BOLD, 16));
+        balanceLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        add(balanceLabel);
+
+        // Introducerea etichetei sumei
+        enterAmountLabel = new JLabel("Introdu suma:");
+        enterAmountLabel.setBounds(0, 50, getWidth() - 20, 20);
+        enterAmountLabel.setFont(new Font("Dialog", Font.BOLD, 16));
+        enterAmountLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        add(enterAmountLabel);
+
+        // Introducerea sumei în câmp
+        enterAmountField = new JTextField();
+        enterAmountField.setBounds(15, 80, getWidth() - 50, 40);
+        enterAmountField.setFont(new Font("Dialog", Font.BOLD, 20));
+        enterAmountField.setHorizontalAlignment(SwingConstants.RIGHT);
+        add(enterAmountField);
     }
 }
