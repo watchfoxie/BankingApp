@@ -5,13 +5,15 @@ import db_objs.User;
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /*
     Execută funcții bancare, cum ar fi depunerea, retragerea, vizualizarea tranzacțiilor anterioare
     și transferul. Aceasta se extinde de la BaseFrame, ceea ce înseamnă că va trebui să ne definim
     propriul addGuiComponent
  */
-public class BankingAppGui extends BaseFrame{
+public class BankingAppGui extends BaseFrame implements ActionListener {
     private JTextField currentBalanceField;
 
     public JTextField getCurrentBalanceField(){
@@ -60,30 +62,40 @@ public class BankingAppGui extends BaseFrame{
         JButton depositButton = new JButton("Depozit");
         depositButton.setBounds(15, 180, getWidth() - 50, 50);
         depositButton.setFont(new Font("Dialog", Font.BOLD, 22));
+        depositButton.addActionListener(this);
         add(depositButton);
 
         // Butonul de retragere
         JButton withdrawButton = new JButton("Retragere");
         withdrawButton.setBounds(15, 250, getWidth() - 50, 50);
         withdrawButton.setFont(new Font("Dialog", Font.BOLD, 22));
+        withdrawButton.addActionListener(this);
         add(withdrawButton);
 
         // Butonul de tranzacție anterioară
-        JButton pastTransactionButton = new JButton("Tranzactie Anterioara");
+        JButton pastTransactionButton = new JButton("Tranzacție Anterioară");
         pastTransactionButton.setBounds(15, 320, getWidth() - 50, 50);
         pastTransactionButton.setFont(new Font("Dialog", Font.BOLD, 22));
+        pastTransactionButton.addActionListener(this);
         add(pastTransactionButton);
 
         // Butonul de transfer
         JButton transferButton = new JButton("Transfer");
         transferButton.setBounds(15, 390, getWidth() - 50, 50);
         transferButton.setFont(new Font("Dialog", Font.BOLD, 22));
+        transferButton.addActionListener(this);
         add(transferButton);
 
         // Butonul de ieșire cont
-        JButton logoutButton = new JButton("Iesire");
+        JButton logoutButton = new JButton("Ieșire");
         logoutButton.setBounds(15, 500, getWidth() - 50, 50);
         logoutButton.setFont(new Font("Dialog", Font.BOLD, 22));
+        logoutButton.addActionListener(this);
         add(logoutButton);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        new BankingAppDialog(this, user).setVisible(true);
     }
 }
