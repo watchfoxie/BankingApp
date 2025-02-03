@@ -14,7 +14,10 @@ public class BankingAppDialog extends JDialog {
     private BankingAppGui bankingAppGui;
     private JLabel balanceLabel;
     private JLabel enterAmountLabel;
+    private JLabel enterUserLabel;
     private JTextField enterAmountField;
+    private JTextField enterUserField;
+    private JButton actionButton;
 
     public BankingAppDialog(BankingAppGui bankingAppGui, User user){
         // Setarea dimensiunii
@@ -63,5 +66,27 @@ public class BankingAppDialog extends JDialog {
         enterAmountField.setFont(new Font("Dialog", Font.BOLD, 20));
         enterAmountField.setHorizontalAlignment(SwingConstants.RIGHT);
         add(enterAmountField);
+    }
+
+    public void addActionButton(String actionButtonType){
+        actionButton = new JButton(actionButtonType);
+        actionButton.setBounds(15, 300, getWidth() - 50, 40);
+        actionButton.setFont(new Font("Dialog", Font.BOLD, 20));
+        add(actionButton);
+    }
+
+    public void addUserField(){
+        // Introducerea în eticheta utilizatorului
+        enterUserLabel = new JLabel("Introduceți nume utilizator: ");
+        enterUserLabel.setBounds(0, 160, getWidth() - 20, 20);
+        enterUserLabel.setFont(new Font("Dialog", Font.BOLD, 16));
+        enterUserLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        add(enterUserLabel);
+
+        // Introducerea în câmpul utilizatorului
+        enterUserField = new JTextField();
+        enterUserField.setBounds(15, 190, getWidth() - 50, 40);
+        enterUserField.setFont(new Font("Dialog", Font.BOLD, 20));
+        add(enterUserField);
     }
 }

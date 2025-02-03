@@ -121,6 +121,14 @@ public class BankingAppGui extends BaseFrame implements ActionListener {
             || buttonPressed.equalsIgnoreCase("Transfer")){
             // Adăugarea în fereastra de dialog a componentelor GUI (sold curent și sumă)
             bankingAppDialog.addCurrentBalanceAndAmount();
+
+            // Adăugarea butonului de acțiune
+            bankingAppDialog.addActionButton(buttonPressed);
+
+            // Pentru acțiunea de transfer vor fi necesare mai multe componente
+            if(buttonPressed.equalsIgnoreCase("Transfer")){
+                bankingAppDialog.addUserField();
+            }
             bankingAppDialog.setVisible(true);
         }
     }
