@@ -64,7 +64,7 @@ public class BankingAppDialog extends JDialog {
         enterAmountField = new JTextField();
         enterAmountField.setBounds(15, 80, getWidth() - 50, 40);
         enterAmountField.setFont(new Font("Dialog", Font.BOLD, 20));
-        enterAmountField.setHorizontalAlignment(SwingConstants.RIGHT);
+        enterAmountField.setHorizontalAlignment(SwingConstants.CENTER);
         add(enterAmountField);
     }
 
@@ -87,6 +87,7 @@ public class BankingAppDialog extends JDialog {
         enterUserField = new JTextField();
         enterUserField.setBounds(15, 190, getWidth() - 50, 40);
         enterUserField.setFont(new Font("Dialog", Font.BOLD, 20));
+        enterUserField.setHorizontalAlignment(SwingConstants.CENTER);
         add(enterUserField);
     }
 }
