@@ -4,12 +4,14 @@ import db_objs.User;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /*
     Afișează un dialog personalizat pentru aplicația noastră BankingAppGui
  */
 
-public class BankingAppDialog extends JDialog {
+public class BankingAppDialog extends JDialog implements ActionListener {
     private User user;
     private BankingAppGui bankingAppGui;
     private JLabel balanceLabel;
@@ -89,5 +91,10 @@ public class BankingAppDialog extends JDialog {
         enterUserField.setFont(new Font("Dialog", Font.BOLD, 20));
         enterUserField.setHorizontalAlignment(SwingConstants.CENTER);
         add(enterUserField);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        // De completat 2
     }
 }
