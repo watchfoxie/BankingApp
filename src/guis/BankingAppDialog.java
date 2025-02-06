@@ -51,7 +51,7 @@ public class BankingAppDialog extends JDialog implements ActionListener {
 
     public void addCurrentBalanceAndAmount(){
         // Eticheta soldului curent
-        balanceLabel = new JLabel("Resurse financiare: MDL" + user.getCurrentBalance());
+        balanceLabel = new JLabel("Resurse financiare: " + user.getCurrentBalance() + " MDL");
         balanceLabel.setBounds(0, 10, getWidth() - 20, 20);
         balanceLabel.setFont(new Font("Dialog", Font.BOLD, 16));
         balanceLabel.setHorizontalAlignment(SwingConstants.CENTER);
