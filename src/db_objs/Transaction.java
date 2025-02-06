@@ -20,5 +20,19 @@ public class Transaction {
         this.transactionDate = transactionDate;
     }
 
-    // De completat 1
+    public int getUserId() {
+        return userId;
+    }
+
+    public String getTransactionType() {
+        return transactionType;
+    }
+
+    public BigDecimal getTransactionAmount() {
+        return transactionAmount;
+    }
+
+    public Date getTransactionDate() {
+        return transactionDate;
+    }
 }

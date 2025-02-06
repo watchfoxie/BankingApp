@@ -1,11 +1,13 @@
 package guis;
 
+import db_objs.Transaction;
 import db_objs.User;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.math.BigDecimal;
 
 /*
     Afișează un dialog personalizat pentru aplicația noastră BankingAppGui
@@ -93,8 +95,28 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         add(enterUserField);
     }
 
+    private void handleTransaction(String transactionType, float amountVal){
+        Transaction transaction;
+
+        if(transactionType.equalsIgnoreCase("Depozit")){
+            // Tipul tranzacției (depozit), adăugarea la soldul curent
+            user.setCurrentBalance(user.getCurrentBalance().add(new BigDecimal(amountVal)));
+        }else{
+            // Tipul tranzacției (retragere), scăderea din soldul curent
+            user.setCurrentBalance(user.getCurrentBalance().subtract(new BigDecimal(amountVal)));
+        }
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
-        // De completat 2
+        String buttonPressed = e.getActionCommand();
+
+        // Obținerea valorii sumei
+        float amountVal = Float.parseFloat(enterAmountField.getText());
+
+        // Dacă se apasă butonul depozitării
+        if(buttonPressed.equalsIgnoreCase("Depozit")){
+            // Dorim să gestionăm tranzacția de depunere
+        }
     }
 }
