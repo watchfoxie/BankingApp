@@ -101,4 +101,23 @@ public class MyJDBC {
         }
         return true;
     }
+    // true - actualizarea reușită a bazei de date, false - nereușită
+    public static boolean addTransactionToDatabase(Transaction transaction){
+        try{
+            Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+
+            PreparedStatement insertTransaction = connection.prepareStatement(
+                    "INSERT transactions(user_id, transaction_type, transaction_amount, transaction_date) " +
+                            "VALUES(?, ?, ?, NOW())"
+            );
+
+            insertTransaction.setInt(1, transaction.getUserId());
+            insertTransaction.setString(2, transaction.getTransactionType());
+            insertTransaction.setBigDecimal(3, transaction.getTransactionAmount());
+            return true;
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

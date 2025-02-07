@@ -101,10 +101,20 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         if(transactionType.equalsIgnoreCase("Depozit")){
             // Tipul tranzacției (depozit), adăugarea la soldul curent
             user.setCurrentBalance(user.getCurrentBalance().add(new BigDecimal(amountVal)));
+
+            // Crearea tranzacției
+            // Lăs data nulă deoarece folosim funcția NOW() în SQL care va obține data curentă
+            transaction = new Transaction(user.getId(), transactionType, new BigDecimal(amountVal), null);
         }else{
             // Tipul tranzacției (retragere), scăderea din soldul curent
             user.setCurrentBalance(user.getCurrentBalance().subtract(new BigDecimal(amountVal)));
+
+            // Doresc să afișez un semn negativ pentru suma amountVal la retragere
+            transaction = new Transaction(user.getId(), transactionType, new BigDecimal(-amountVal), null);
         }
+
+        // Actualizarea bazei de date
+
     }
 
     @Override
