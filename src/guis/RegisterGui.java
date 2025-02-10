@@ -58,7 +58,7 @@ public class RegisterGui extends BaseFrame{
         passwordField.setFont(new Font("Dialog", Font.PLAIN, 28));
         add(passwordField);
 
-        // Introducerea reoetată a etichetei parolei
+        // Introducerea repetată a etichetei parolei
         JLabel rePasswordLabel = new JLabel("Repetați parola:");
         rePasswordLabel.setBounds(20, 320, getWidth() - 50, 40);
         rePasswordLabel.setFont(new Font("Dialog", Font.PLAIN, 20));

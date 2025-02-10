@@ -118,7 +118,6 @@ public class LoginGui extends BaseFrame{
                 new RegisterGui().setVisible(true);
             }
         });
-
         add(registerLabel);
     }
 }

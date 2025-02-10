@@ -120,4 +120,23 @@ public class MyJDBC {
         }
         return false;
     }
+
+    // true - actualizarea soldului reușită, false - actualizarea soldului eșuată
+    public static boolean updateCurrentBalance(User user){
+        try{
+            Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+
+            PreparedStatement updateBalance = connection.prepareStatement(
+                    "UPDATE users SET current_balance = ? WHERE id = ?"
+            );
+
+            updateBalance.setBigDecimal(1, user.getCurrentBalance());
+            updateBalance.setInt(2, user.getId());
+            updateBalance.executeUpdate();
+            return true;
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
