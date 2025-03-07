@@ -11,7 +11,7 @@ import java.awt.event.MouseEvent;
 
 public class RegisterGui extends BaseFrame{
     public RegisterGui(){
-        super("Aplicatie bancara - Inregistrare");
+        super("Aplicație bancara - Înregistrare");
     }
 
     @Override
@@ -139,7 +139,7 @@ public class RegisterGui extends BaseFrame{
         // Numele de utilizator trebuie să aibă cel puțin 6 caractere
         if(username.length() < 6) return false;
 
-        // Parola și reintroducerea parolii trebuie să fie aceleași
+        // Parola și reintroducerea parolei trebuie să fie aceleași
         if(!password.equals(rePassword)) return false;
 
         // Trece validarea

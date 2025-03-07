@@ -23,7 +23,7 @@ public abstract class BaseFrame extends JFrame {
     }
 
     private void initialize(String title) {
-        // Instanțiați proprietățile jframe și adăugați un titlu la bară
+        // Instanțierea proprietăților JFrame și adăugarea unui titlu la bară
         setTitle(title);
 
         // Setează dimensiunea (în pixeli)

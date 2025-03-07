@@ -107,7 +107,7 @@ public class LoginGui extends BaseFrame{
         registerLabel.setFont(new Font("Dialog", Font.PLAIN, 20));
         registerLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        // Adaugarea unui ascultător de evenimente astfel încât, atunci când se face clic pe mouse, se va lansa ghidul de înregistrare
+        // Adăugarea unui ascultător de evenimente astfel încât, atunci când se face clic pe mouse, se va lansa ghidul de înregistrare
         registerLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {

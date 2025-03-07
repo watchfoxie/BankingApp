@@ -1,5 +1,6 @@
 package guis;
 
+import db_objs.MyJDBC;
 import db_objs.Transaction;
 import db_objs.User;
 
@@ -114,7 +115,29 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         }
 
         // Actualizarea bazei de date
+        if(MyJDBC.addTransactionToDatabase(transaction) && MyJDBC.updateCurrentBalance(user)){
+            // Afișarea dialogului de succes
+            JOptionPane.showMessageDialog(this, transactionType + " Succes!");
 
+            // Resetarea câmpurilor
+            resetFieldsAndUpdateCurrentBalance();
+        }
+    }
+
+    private void resetFieldsAndUpdateCurrentBalance(){
+        // Resetarea câmpurilor
+        enterAmountField.setText("");
+
+        // Apare numai atunci când se face click pe transfer
+        if(enterUserField != null){
+            enterUserField.setText("");
+        }
+
+        // Actualizarea soldului curent pe dialog
+        balanceLabel.setText("Soldul curent: MDL" + user.getCurrentBalance());
+
+        // Actualizarea soldului curent pe GUI-ul principal
+        bankingAppGui.getCurrentBalanceField().setText("MDL" + user.getCurrentBalance());
     }
 
     @Override
