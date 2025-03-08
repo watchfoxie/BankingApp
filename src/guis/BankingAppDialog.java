@@ -77,6 +77,7 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         actionButton = new JButton(actionButtonType);
         actionButton.setBounds(15, 300, getWidth() - 50, 40);
         actionButton.setFont(new Font("Dialog", Font.BOLD, 20));
+        actionButton.addActionListener(this);
         add(actionButton);
     }
 

@@ -63,12 +63,13 @@ public class MyJDBC {
                 Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
 
                 PreparedStatement preparedStatement = connection.prepareStatement(
-                        "INSERT INTO users(username, password)" +
-                                "VALUES(?, ?)"
+                        "INSERT INTO users(username, password, current_balance)" +
+                                "VALUES(?, ?, ?)"
                 );
 
                 preparedStatement.setString(1, username);
                 preparedStatement.setString(2, password);
+                preparedStatement.setBigDecimal(3, new BigDecimal(0));
 
                 preparedStatement.executeUpdate();
                 return true;
