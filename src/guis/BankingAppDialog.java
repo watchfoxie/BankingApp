@@ -121,6 +121,9 @@ public class BankingAppDialog extends JDialog implements ActionListener {
 
             // Resetarea câmpurilor
             resetFieldsAndUpdateCurrentBalance();
+        }else{
+            // Afișarea dialogului de eșec
+            JOptionPane.showMessageDialog(this, transactionType + " Eșuat!");
         }
     }
 
@@ -150,6 +153,7 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         // Dacă se apasă butonul depozitării
         if(buttonPressed.equalsIgnoreCase("Depozit")){
             // Dorim să gestionăm tranzacția de depunere
+            handleTransaction(buttonPressed, amountVal);
         }
     }
 }
