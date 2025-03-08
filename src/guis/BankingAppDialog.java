@@ -144,6 +144,11 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         bankingAppGui.getCurrentBalanceField().setText("MDL" + user.getCurrentBalance());
     }
 
+    private void handleTransfer(User user, String transferredUser, float amount){
+        // Trebuie de completat pentru a manipula tranzacția
+
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         String buttonPressed = e.getActionCommand();
@@ -155,6 +160,31 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         if(buttonPressed.equalsIgnoreCase("Depozit")){
             // Dorim să gestionăm tranzacția de depunere
             handleTransaction(buttonPressed, amountVal);
+        }else{
+            // Retragere sau transfer prin presare
+
+
+            // Validarea datelor introduse asigurând că suma retrasă sau transferată este mai mică decât soldul curent
+            // Dacă rezultatul este -1, înseamnă că suma introdusă este mai mare
+            // Dacă rezultatul este 0, înseamnă că sunt egale
+            // Dacă rezultatul este 1, înseamnă că suma introdusă este mai mică
+            int result = user.getCurrentBalance().compareTo(BigDecimal.valueOf(amountVal));
+            if(result < 0){
+                // Afișarea dialogului de eroare
+                JOptionPane.showMessageDialog(this, "Eroare: Valoarea de intrare este mai mare decât soldul curent");
+                return;
+            }
+
+            // Verificarea dacă s-a apăsat pe retragere sau transfer
+            if(buttonPressed.equalsIgnoreCase("Retragere")){
+                handleTransaction(buttonPressed, amountVal);
+            }else{
+                // Efectuarea operațiunii de transfer
+                String transferredUser = enterUserField.getText();
+
+                // Manipulare transfer
+
+            }
         }
     }
 }
