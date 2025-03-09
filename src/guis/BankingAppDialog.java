@@ -146,6 +146,9 @@ public class BankingAppDialog extends JDialog implements ActionListener {
             // Fundal alb fiecărui container
             pastTransactionContainer.setBackground(Color.WHITE);
 
+            // Marginea neagră pentru fiecare container de tranzacții
+            pastTransactionContainer.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
             // Adăugarea componentei de tranzacție la panoul de tranzacții
             pastTransactionPanel.add(pastTransactionContainer);
         }
