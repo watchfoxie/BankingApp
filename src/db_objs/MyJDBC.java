@@ -141,6 +141,8 @@ public class MyJDBC {
         return false;
     }
 
+    // true - transferul a fost cu succes
+    // false - transferul a eșuat
     public static boolean transfer(User user, String transferredUsername, float transferAmount){
         try{
             Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);

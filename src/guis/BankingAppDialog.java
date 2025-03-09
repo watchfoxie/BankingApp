@@ -146,7 +146,15 @@ public class BankingAppDialog extends JDialog implements ActionListener {
 
     private void handleTransfer(User user, String transferredUser, float amount){
         // Trebuie de completat pentru a manipula tranzacția
-
+        // Încercarea de a efectua transferul
+        if(MyJDBC.transfer(user, transferredUser, amount)){
+            // Afișarea dialogului de succes
+            JOptionPane.showMessageDialog(this, "Transferul a fost efectuat cu succes!");
+            resetFieldsAndUpdateCurrentBalance();
+        }else{
+            // Afișarea dialogului de eșec
+            JOptionPane.showMessageDialog(this, "Transferul a eșuat!");
+        }
     }
 
     @Override
@@ -183,7 +191,7 @@ public class BankingAppDialog extends JDialog implements ActionListener {
                 String transferredUser = enterUserField.getText();
 
                 // Manipulare transfer
-
+                handleTransfer(user, transferredUser, amountVal);
             }
         }
     }
