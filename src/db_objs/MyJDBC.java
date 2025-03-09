@@ -115,6 +115,9 @@ public class MyJDBC {
             insertTransaction.setInt(1, transaction.getUserId());
             insertTransaction.setString(2, transaction.getTransactionType());
             insertTransaction.setBigDecimal(3, transaction.getTransactionAmount());
+
+            // Actualizarea bazei de date
+            insertTransaction.executeUpdate();
             return true;
         }catch(SQLException e){
             e.printStackTrace();
@@ -184,7 +187,7 @@ public class MyJDBC {
                 updateCurrentBalance(transferredUser);
 
                 // Actualizarea datelor curente ale utilizatorului
-                user.setCurrentBalance(user.getCurrentBalance().add(BigDecimal.valueOf(transferAmount)));
+                user.setCurrentBalance(user.getCurrentBalance().subtract(BigDecimal.valueOf(transferAmount)));
                 updateCurrentBalance(user);
 
                 // Adăugarea acestor tranzacții la baza de date
