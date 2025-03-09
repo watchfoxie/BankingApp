@@ -113,6 +113,44 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         // Afișează derularea verticală numai atunci când este necesară
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setBounds(0, 20, getWidth() - 15, getHeight() - 15);
+
+        // Efectuarea un apel către baza de date pentru a prelua toate tranzacțiile anterioare și a le stoca în lista array
+        pastTransactions = MyJDBC.getPastTransaction(user);
+
+        // Iterarea prin listă și adăugarea la GUI
+        for(int i = 0; i < pastTransactions.size(); i++){
+            // Stocarea tranzacției curente
+            Transaction pastTransaction = pastTransactions.get(i);
+
+            // Crearea unui container pentru a stoca o tranzacție individuală
+            JPanel pastTransactionContainer = new JPanel();
+            pastTransactionContainer.setLayout(new BorderLayout());
+
+            // Crearea etichetei tipului de tranzacție
+            JLabel transactionTypeLabel = new JLabel(pastTransaction.getTransactionType());
+            transactionTypeLabel.setFont(new Font("Dialog", Font.BOLD, 20));
+
+            // Crearea etichetei cu valoarea tranzacției
+            JLabel transactionAmountLabel = new JLabel(String.valueOf(pastTransaction.getTransactionAmount()));
+            transactionAmountLabel.setFont(new Font("Dialog", Font.BOLD, 20));
+
+            // Crearea etichetei cu data tranzacției
+            JLabel transactionDateLabel = new JLabel(String.valueOf(pastTransaction.getTransactionDate()));
+            transactionDateLabel.setFont(new Font("Dialog", Font.BOLD, 20));
+
+            // Adăugarea la container (vest, est, sud)
+            pastTransactionContainer.add(transactionTypeLabel, BorderLayout.WEST);
+            pastTransactionContainer.add(transactionAmountLabel, BorderLayout.EAST);
+            pastTransactionContainer.add(transactionDateLabel, BorderLayout.SOUTH);
+
+            // Fundal alb fiecărui container
+            pastTransactionContainer.setBackground(Color.WHITE);
+
+            // Adăugarea componentei de tranzacție la panoul de tranzacții
+            pastTransactionPanel.add(pastTransactionPanel);
+        }
+        // Adăugarea la dialog
+        add(scrollPane);
     }
 
     private void handleTransaction(String transactionType, float amountVal){

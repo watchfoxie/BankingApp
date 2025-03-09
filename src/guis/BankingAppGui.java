@@ -131,8 +131,11 @@ public class BankingAppGui extends BaseFrame implements ActionListener {
             }
             bankingAppDialog.setVisible(true);
         }else if(buttonPressed.equalsIgnoreCase("Tranzacție Anterioară")){
-            // Cod pentru tranzacția anterioară
-
+            // Evenimentul apăsării butonului de tranzacție anterioară
+            bankingAppDialog.addPastTransactionComponents();
         }
+
+        // Facerea vizibilă a dialogului aplicației
+        bankingAppDialog.setVisible(true);
     }
 }

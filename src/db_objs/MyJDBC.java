@@ -7,6 +7,7 @@ package db_objs;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.util.ArrayList;
 
 public class MyJDBC {
     // Configurarea bazei de date
@@ -199,5 +200,37 @@ public class MyJDBC {
             e.printStackTrace();
         }
         return false;
+    }
+
+    // Obținerea tuturor tranzacțiilor (utilizate pentru tranzacțiile anterioare)
+    public static ArrayList<Transaction> getPastTransaction(User user){
+        ArrayList<Transaction> pastTransactions = new ArrayList<>();
+        try{
+            Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+
+            PreparedStatement selectAllTransaction = connection.prepareStatement(
+                    "SELECT * FROM transactions WHERE user_id = ?"
+            );
+            selectAllTransaction.setInt(1, user.getId());
+
+            ResultSet resultSet = selectAllTransaction.executeQuery();
+
+            // Iterare prin rezultate (dacă există)
+            while(resultSet.next()){
+                // Crearea obiectului tranzacție
+                Transaction transaction = new Transaction(
+                        user.getId(),
+                        resultSet.getString("transaction_type"),
+                        resultSet.getBigDecimal("transaction_amount"),
+                        resultSet.getDate("transaction_date")
+                );
+
+                // Stocarea în lista array
+                pastTransactions.add(transaction);
+            }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+        return pastTransactions;
     }
 }
