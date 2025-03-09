@@ -137,5 +137,6 @@ public class BankingAppGui extends BaseFrame implements ActionListener {
 
         // Facerea vizibilă a dialogului aplicației
         bankingAppDialog.setVisible(true);
+        // 01:47:11
     }
 }
