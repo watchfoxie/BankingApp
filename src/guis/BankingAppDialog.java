@@ -9,6 +9,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 
 /*
     Afișează un dialog personalizat pentru aplicația noastră BankingAppGui
@@ -23,6 +24,8 @@ public class BankingAppDialog extends JDialog implements ActionListener {
     private JTextField enterAmountField;
     private JTextField enterUserField;
     private JButton actionButton;
+    private JPanel pastTransactionPanel;
+    private ArrayList<Transaction> pastTransactions;
 
     public BankingAppDialog(BankingAppGui bankingAppGui, User user){
         // Setarea dimensiunii
@@ -95,6 +98,21 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         enterUserField.setFont(new Font("Dialog", Font.BOLD, 20));
         enterUserField.setHorizontalAlignment(SwingConstants.CENTER);
         add(enterUserField);
+    }
+
+    public void addPastTransactionComponents(){
+        // Containerul în care voi stoca fiecare tranzacție
+        pastTransactionPanel = new JPanel();
+
+        // Fac aspectul 1x1
+        pastTransactionPanel.setLayout(new BoxLayout(pastTransactionPanel, BoxLayout.Y_AXIS));
+
+        // Adăugarea posibilității de derulare la container
+        JScrollPane scrollPane = new JScrollPane(pastTransactionPanel);
+
+        // Afișează derularea verticală numai atunci când este necesară
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setBounds(0, 20, getWidth() - 15, getHeight() - 15);
     }
 
     private void handleTransaction(String transactionType, float amountVal){
