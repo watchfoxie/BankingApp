@@ -3,15 +3,13 @@ package guis;
 import db_objs.MyJDBC;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.Arrays;
 
 public class RegisterGui extends BaseFrame {
     public RegisterGui() {
         super("Aplicație bancara - Înregistrare");
+        setLocationRelativeTo(null);
     }
 
     @Override
@@ -90,8 +88,11 @@ public class RegisterGui extends BaseFrame {
         loginLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                Point location = RegisterGui.this.getLocation();
                 RegisterGui.this.dispose();
-                new LoginGui().setVisible(true);
+                LoginGui loginGui = new LoginGui();
+                loginGui.setLocation(location);
+                loginGui.setVisible(true);
             }
         });
         add(loginLabel);
