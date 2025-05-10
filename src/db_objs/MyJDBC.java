@@ -1,235 +1,296 @@
 package db_objs;
 
-/*
-    Clasa JDBC este utilizată pentru a interacționa cu baza de date MySQL pentru a efectua operații
-    cum ar fi preluarea și actualizarea bazei de date.
- */
+import de.svws_nrw.ext.jbcrypt.BCrypt;
 
+import javax.swing.*;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class MyJDBC {
-    // Configurarea bazei de date
-    private static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/bankapp";
-    private static final String DB_USERNAME = "root";
-    private static final String DB_PASSWORD = "mt67521124";
+    private static final Logger LOGGER = Logger.getLogger(MyJDBC.class.getName());
+    private static String DB_URL;
+    private static String DB_USERNAME;
+    private static String DB_PASSWORD;
 
-    // Dacă este valid, returnează un obiect cu informațiile utilizatorului
-    public static User validateLogin(String username, String password){
-        try{
-            // Stabilirea unei conexiuni la baza de date utilizând configurații
-            Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
-
-            // Crearea unei interogări SQL
-            PreparedStatement preparedStatement = connection.prepareStatement(
-                    "SELECT * FROM users WHERE username = ? AND password = ?"
-            );
-
-            // Înlocuim ? cu valorile corespunzătoare
-            // Indicele parametrului care se referă la iterația ? astfel încât 1 este primul ? și 2 este al doilea ?
-            preparedStatement.setString(1, username);
-            preparedStatement.setString(2, password);
-
-            // Executarea interogării și stocarea într-un set de rezultate
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            // next() returnează true sau false
-            // true - interogarea a returnat date și setul de rezultate indică acum primul rând
-            // false - interogarea nu a returnat date și setul de rezultate este egal cu null
-            if(resultSet.next()){
-                // Succes
-                // get id
-                int userId = resultSet.getInt("id");
-
-                // Obținerea soldului curent
-                BigDecimal currentBalance = resultSet.getBigDecimal("current_balance");
-
-                // Returnează obiectul utilizator
-                return new User(userId, username, password, currentBalance);
-            }
-        }catch(SQLException e){
-            e.printStackTrace();
+    static {
+        try {
+            Properties props = new Properties();
+            props.load(new FileInputStream("src/config.properties"));
+            DB_URL = props.getProperty("db.url");
+            DB_USERNAME = props.getProperty("db.username");
+            DB_PASSWORD = props.getProperty("db.password");
+            createDatabaseIfNotExists();
+            createTablesIfNotExists();
+        } catch (IOException | SQLException e) {
+            LOGGER.log(Level.SEVERE, "Eroare la inițializare", e);
         }
-        // Utilizator invalid
+    }
+
+    private static void createDatabaseIfNotExists() throws SQLException {
+        String dbName = "bankapp";
+        String baseUrl = DB_URL.substring(0, DB_URL.lastIndexOf('/') + 1);
+        try (Connection conn = DriverManager.getConnection(baseUrl, DB_USERNAME, DB_PASSWORD);
+             Statement stmt = conn.createStatement()) {
+            ResultSet rs = stmt.executeQuery("SHOW DATABASES LIKE '" + dbName + "'");
+            if (!rs.next()) {
+                stmt.executeUpdate("CREATE DATABASE " + dbName);
+                LOGGER.info("Baza de date " + dbName + " a fost creată.");
+            }
+        }
+    }
+
+    private static void createTablesIfNotExists() throws SQLException {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+             Statement stmt = conn.createStatement()) {
+            ResultSet rs = stmt.executeQuery("SHOW TABLES LIKE 'users'");
+            if (!rs.next()) {
+                stmt.executeUpdate("CREATE TABLE users (" +
+                        "id INT NOT NULL AUTO_INCREMENT, " +
+                        "username VARCHAR(45) NOT NULL, " +
+                        "password VARCHAR(60) NOT NULL, " +
+                        "current_balance DECIMAL(10,2) NULL, " +
+                        "failed_attempts INT DEFAULT 0, " +
+                        "last_failed_attempt TIMESTAMP NULL, " +
+                        "PRIMARY KEY (id)" +
+                        ")");
+                LOGGER.info("Tabela users a fost creată.");
+            }
+            rs = stmt.executeQuery("SHOW TABLES LIKE 'transactions'");
+            if (!rs.next()) {
+                stmt.executeUpdate("CREATE TABLE transactions (" +
+                        "id INT NOT NULL AUTO_INCREMENT, " +
+                        "transaction_amount DECIMAL(10,2) NOT NULL, " +
+                        "transaction_date DATETIME NOT NULL, " +
+                        "transaction_type VARCHAR(45) NOT NULL, " +
+                        "user_id INT NOT NULL, " +
+                        "PRIMARY KEY (id), " +
+                        "INDEX user_id_idx (user_id ASC) VISIBLE, " +
+                        "CONSTRAINT user_id " +
+                        "FOREIGN KEY (user_id) " +
+                        "REFERENCES users (id) " +
+                        "ON DELETE NO ACTION " +
+                        "ON UPDATE NO ACTION" +
+                        ")");
+                LOGGER.info("Tabela transactions a fost creată.");
+            }
+        }
+    }
+
+    public static User validateLogin(String username, String password) {
+        try {
+            Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+            PreparedStatement preparedStatement = connection.prepareStatement(
+                    "SELECT * FROM users WHERE username = ?"
+            );
+            preparedStatement.setString(1, username);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                int failedAttempts = resultSet.getInt("failed_attempts");
+                Timestamp lastFailedAttempt = resultSet.getTimestamp("last_failed_attempt");
+                if (failedAttempts >= 5 && lastFailedAttempt != null) {
+                    long timeDiff = System.currentTimeMillis() - lastFailedAttempt.getTime();
+                    if (timeDiff < 15 * 60 * 1000) {
+                        JOptionPane.showMessageDialog(null, "Cont blocat. Încercați mai târziu.");
+                        return null;
+                    } else {
+                        resetFailedAttempts(connection, resultSet.getInt("id"));
+                    }
+                }
+                String hashedPassword = resultSet.getString("password");
+                if (BCrypt.checkpw(password, hashedPassword)) {
+                    resetFailedAttempts(connection, resultSet.getInt("id"));
+                    int userId = resultSet.getInt("id");
+                    BigDecimal currentBalance = resultSet.getBigDecimal("current_balance");
+                    LOGGER.info("Autentificare reușită pentru utilizatorul: " + username);
+                    return new User(userId, username, hashedPassword, currentBalance);
+                } else {
+                    incrementFailedAttempts(connection, resultSet.getInt("id"));
+                    LOGGER.warning("Încercare de autentificare eșuată pentru utilizatorul: " + username);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Eroare SQL la autentificare", e);
+        }
         return null;
     }
 
-    // Înregistrarea unui nou utilizator în baza de date
-    // true - înregistrarea reușește, false - înregistrarea eșuează
-    public static boolean register(String username, String password){
-        try{
-            // Mai întâi va trebui să verificăm dacă numele de utilizator a fost deja luat
-            if(!checkUser(username)){
+    private static void incrementFailedAttempts(Connection connection, int userId) throws SQLException {
+        PreparedStatement ps = connection.prepareStatement(
+                "UPDATE users SET failed_attempts = failed_attempts + 1, last_failed_attempt = NOW() WHERE id = ?"
+        );
+        ps.setInt(1, userId);
+        ps.executeUpdate();
+    }
+
+    private static void resetFailedAttempts(Connection connection, int userId) throws SQLException {
+        PreparedStatement ps = connection.prepareStatement(
+                "UPDATE users SET failed_attempts = 0, last_failed_attempt = NULL WHERE id = ?"
+        );
+        ps.setInt(1, userId);
+        ps.executeUpdate();
+    }
+
+    public static boolean register(String username, String password) {
+        try {
+            if (!checkUser(username)) {
                 Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
-
                 PreparedStatement preparedStatement = connection.prepareStatement(
-                        "INSERT INTO users(username, password, current_balance)" +
-                                "VALUES(?, ?, ?)"
+                        "INSERT INTO users(username, password, current_balance) VALUES(?, ?, ?)"
                 );
-
+                String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
                 preparedStatement.setString(1, username);
-                preparedStatement.setString(2, password);
+                preparedStatement.setString(2, hashedPassword);
                 preparedStatement.setBigDecimal(3, new BigDecimal(0));
-
                 preparedStatement.executeUpdate();
+                LOGGER.info("Utilizator înregistrat: " + username);
                 return true;
             }
-        }catch(SQLException e){
-            e.printStackTrace();
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Eroare SQL la înregistrare", e);
         }
         return false;
     }
 
-    // Verifică dacă numele de utilizator există deja în baza de date
-    // true - utilizatorul există, false - utilizatorul nu există
-    private static boolean checkUser(String username){
-        try{
+    private static boolean checkUser(String username) {
+        try {
             Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
-
             PreparedStatement preparedStatement = connection.prepareStatement(
                     "SELECT * FROM users WHERE username = ?"
             );
-
             preparedStatement.setString(1, username);
             ResultSet resultSet = preparedStatement.executeQuery();
-
-            // Acest lucru înseamnă că interogarea nu a returnat date, ceea ce înseamnă că numele de utilizator este disponibil
-            if(!resultSet.next()){
-                return false;
+            if (resultSet.next()) {
+                return true;
             }
-        }catch (SQLException e){
-            e.printStackTrace();
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Eroare SQL la verificarea utilizatorului", e);
         }
-        return true;
+        return false;
     }
-    // true - actualizarea reușită a bazei de date, false - nereușită
-    public static boolean addTransactionToDatabase(Transaction transaction){
-        try{
+
+    public static boolean addTransactionToDatabase(Transaction transaction) {
+        try {
             Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
-
             PreparedStatement insertTransaction = connection.prepareStatement(
-                    "INSERT transactions(user_id, transaction_type, transaction_amount, transaction_date) " +
-                            "VALUES(?, ?, ?, NOW())"
+                    "INSERT transactions(user_id, transaction_type, transaction_amount, transaction_date) VALUES(?, ?, ?, NOW())"
             );
-
             insertTransaction.setInt(1, transaction.getUserId());
             insertTransaction.setString(2, transaction.getTransactionType());
             insertTransaction.setBigDecimal(3, transaction.getTransactionAmount());
-
-            // Actualizarea bazei de date
             insertTransaction.executeUpdate();
+            LOGGER.info("Tranzacție adăugată pentru user_id: " + transaction.getUserId());
             return true;
-        }catch(SQLException e){
-            e.printStackTrace();
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Eroare SQL la adăugarea tranzacției", e);
         }
         return false;
     }
 
-    // true - actualizarea soldului reușită, false - actualizarea soldului eșuată
-    public static boolean updateCurrentBalance(User user){
-        try{
+    public static boolean updateCurrentBalance(User user) {
+        try {
             Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
-
             PreparedStatement updateBalance = connection.prepareStatement(
                     "UPDATE users SET current_balance = ? WHERE id = ?"
             );
-
             updateBalance.setBigDecimal(1, user.getCurrentBalance());
             updateBalance.setInt(2, user.getId());
             updateBalance.executeUpdate();
+            LOGGER.info("Sold actualizat pentru user_id: " + user.getId());
             return true;
-        }catch(SQLException e){
-            e.printStackTrace();
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Eroare SQL la actualizarea soldului", e);
         }
         return false;
     }
 
-    // true - transferul a fost cu succes
-    // false - transferul a eșuat
-    public static boolean transfer(User user, String transferredUsername, float transferAmount){
-        try{
-            Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
-
+    public static boolean transfer(User user, String transferredUsername, float transferAmount) {
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+            connection.setAutoCommit(false);
             PreparedStatement queryUser = connection.prepareStatement(
-                    "SELECT * FROM users WHERE username = ?"
+                    "SELECT * FROM users WHERE username = ? FOR UPDATE"
             );
-
             queryUser.setString(1, transferredUsername);
             ResultSet resultSet = queryUser.executeQuery();
-
-            while(resultSet.next()){
-                // Efectuarea transferului
+            if (resultSet.next()) {
                 User transferredUser = new User(
                         resultSet.getInt("id"),
                         transferredUsername,
                         resultSet.getString("password"),
                         resultSet.getBigDecimal("current_balance")
                 );
-
-                // Crearea tranzacției
                 Transaction transferTransaction = new Transaction(
                         user.getId(),
                         "Transfer",
                         new BigDecimal(-transferAmount),
                         null
                 );
-
-                // Tranzacție pentru utilizatorul care primește bani
                 Transaction receivedTransaction = new Transaction(
                         transferredUser.getId(),
                         "Transfer",
                         new BigDecimal(transferAmount),
                         null
                 );
-
-                // Actualizarea datelor de transfer
                 transferredUser.setCurrentBalance(transferredUser.getCurrentBalance().add(BigDecimal.valueOf(transferAmount)));
                 updateCurrentBalance(transferredUser);
-
-                // Actualizarea datelor curente ale utilizatorului
                 user.setCurrentBalance(user.getCurrentBalance().subtract(BigDecimal.valueOf(transferAmount)));
                 updateCurrentBalance(user);
-
-                // Adăugarea acestor tranzacții la baza de date
                 addTransactionToDatabase(transferTransaction);
                 addTransactionToDatabase(receivedTransaction);
+                connection.commit();
+                LOGGER.info("Transfer efectuat de la " + user.getUsername() + " la " + transferredUsername);
                 return true;
             }
-        }catch(SQLException e){
-            e.printStackTrace();
+            connection.rollback();
+            return false;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Eroare SQL la transfer", e);
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                } catch (SQLException ex) {
+                    LOGGER.log(Level.SEVERE, "Eroare la rollback", ex);
+                }
+            }
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.setAutoCommit(true);
+                } catch (SQLException e) {
+                    LOGGER.log(Level.SEVERE, "Eroare la resetare auto-commit", e);
+                }
+            }
         }
         return false;
     }
 
-    // Obținerea tuturor tranzacțiilor (utilizate pentru tranzacțiile anterioare)
-    public static ArrayList<Transaction> getPastTransaction(User user){
+    public static ArrayList<Transaction> getPastTransaction(User user) {
         ArrayList<Transaction> pastTransactions = new ArrayList<>();
-        try{
+        try {
             Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
-
             PreparedStatement selectAllTransaction = connection.prepareStatement(
                     "SELECT * FROM transactions WHERE user_id = ?"
             );
             selectAllTransaction.setInt(1, user.getId());
-
             ResultSet resultSet = selectAllTransaction.executeQuery();
-
-            // Iterare prin rezultate (dacă există)
-            while(resultSet.next()){
-                // Crearea obiectului tranzacție
+            while (resultSet.next()) {
                 Transaction transaction = new Transaction(
                         user.getId(),
                         resultSet.getString("transaction_type"),
                         resultSet.getBigDecimal("transaction_amount"),
                         resultSet.getDate("transaction_date")
                 );
-
-                // Stocarea în lista array
                 pastTransactions.add(transaction);
             }
-        }catch(SQLException e){
-            e.printStackTrace();
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Eroare SQL la obținerea tranzacțiilor anterioare", e);
         }
         return pastTransactions;
     }
