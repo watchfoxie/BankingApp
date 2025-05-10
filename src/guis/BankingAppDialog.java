@@ -4,6 +4,7 @@ import db_objs.MyJDBC;
 import db_objs.Transaction;
 import db_objs.User;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -23,7 +24,7 @@ public class BankingAppDialog extends JDialog implements ActionListener {
     private ArrayList<Transaction> pastTransactions;
 
     public BankingAppDialog(BankingAppGui bankingAppGui, User user) {
-        setSize(400, 400);
+        setSize(400, 460);
         setModal(true);
         setLocationRelativeTo(bankingAppGui);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -76,28 +77,101 @@ public class BankingAppDialog extends JDialog implements ActionListener {
     }
 
     public void addPastTransactionComponents() {
+        // Titlul secțiunii de tranzacții
+        JLabel titleLabel = new JLabel("Istoricul tranzacțiilor");
+        titleLabel.setFont(new Font("Dialog", Font.BOLD, 18));
+        titleLabel.setBounds(0, 10, getWidth() - 20, 25);
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        add(titleLabel);
+
+        // Creăm panoul principal pentru tranzacții
         pastTransactionPanel = new JPanel();
         pastTransactionPanel.setLayout(new BoxLayout(pastTransactionPanel, BoxLayout.Y_AXIS));
+        pastTransactionPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        pastTransactionPanel.setBackground(new Color(245, 245, 245));
+
+        // Creăm panoul pentru scroll
         JScrollPane scrollPane = new JScrollPane(pastTransactionPanel);
+        scrollPane.setBounds(15, 45, getWidth() - 40, getHeight() - 70);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setBounds(0, 20, getWidth() - 15, getHeight() - 15);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        // Obținem tranzacțiile din baza de date
         pastTransactions = MyJDBC.getPastTransaction(user);
+
+        // Adăugăm un header pentru tranzacții
+        JPanel headerPanel = new JPanel(new GridLayout(1, 3));
+        headerPanel.setMaximumSize(new Dimension(scrollPane.getWidth() - 30, 30));
+        headerPanel.setBackground(new Color(220, 220, 220));
+
+        JLabel typeHeader = new JLabel("Tip tranzacție");
+        typeHeader.setFont(new Font("Dialog", Font.BOLD, 14));
+        typeHeader.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JLabel amountHeader = new JLabel("Sumă");
+        amountHeader.setFont(new Font("Dialog", Font.BOLD, 14));
+        amountHeader.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JLabel dateHeader = new JLabel("Data");
+        dateHeader.setFont(new Font("Dialog", Font.BOLD, 14));
+        dateHeader.setHorizontalAlignment(SwingConstants.CENTER);
+
+        headerPanel.add(typeHeader);
+        headerPanel.add(amountHeader);
+        headerPanel.add(dateHeader);
+        pastTransactionPanel.add(headerPanel);
+
+        // Adăugăm tranzacțiile în panou
         for (Transaction pastTransaction : pastTransactions) {
-            JPanel pastTransactionContainer = new JPanel();
-            pastTransactionContainer.setLayout(new BorderLayout());
-            JLabel transactionTypeLabel = new JLabel(pastTransaction.getTransactionType());
-            transactionTypeLabel.setFont(new Font("Dialog", Font.BOLD, 20));
-            JLabel transactionAmountLabel = new JLabel(String.valueOf(pastTransaction.getTransactionAmount()));
-            transactionAmountLabel.setFont(new Font("Dialog", Font.BOLD, 20));
-            JLabel transactionDateLabel = new JLabel(String.valueOf(pastTransaction.getTransactionDate()));
-            transactionDateLabel.setFont(new Font("Dialog", Font.BOLD, 20));
-            pastTransactionContainer.add(transactionTypeLabel, BorderLayout.WEST);
-            pastTransactionContainer.add(transactionAmountLabel, BorderLayout.EAST);
-            pastTransactionContainer.add(transactionDateLabel, BorderLayout.SOUTH);
-            pastTransactionContainer.setBackground(Color.WHITE);
-            pastTransactionContainer.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-            pastTransactionPanel.add(pastTransactionContainer);
+            JPanel transactionPanel = new JPanel(new GridLayout(1, 3));
+            transactionPanel.setMaximumSize(new Dimension(scrollPane.getWidth() - 30, 40));
+            transactionPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
+
+            // Formatăm tipul tranzacției
+            JLabel typeLabel = new JLabel(pastTransaction.getTransactionType());
+            typeLabel.setFont(new Font("Dialog", Font.PLAIN, 14));
+            typeLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+            // Formatăm suma tranzacției cu culori diferite în funcție de tip
+            JLabel amountLabel = new JLabel(String.valueOf(pastTransaction.getTransactionAmount()));
+            amountLabel.setFont(new Font("Dialog", Font.PLAIN, 14));
+            amountLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+            if (pastTransaction.getTransactionAmount().compareTo(BigDecimal.ZERO) < 0) {
+                amountLabel.setForeground(new Color(220, 0, 0));
+            } else {
+                amountLabel.setForeground(new Color(0, 150, 0));
+            }
+
+            // Formatăm data tranzacției
+            JLabel dateLabel = new JLabel(String.valueOf(pastTransaction.getTransactionDate()));
+            dateLabel.setFont(new Font("Dialog", Font.PLAIN, 14));
+            dateLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+            transactionPanel.add(typeLabel);
+            transactionPanel.add(amountLabel);
+            transactionPanel.add(dateLabel);
+
+            // Adăugăm efect de hover (opțional, necesită MouseListener)
+            transactionPanel.setBackground(Color.WHITE);
+
+            pastTransactionPanel.add(transactionPanel);
+            // Adăugăm un mic spațiu între tranzacții
+            pastTransactionPanel.add(Box.createRigidArea(new Dimension(0, 2)));
         }
+
+        // Adăugăm un spațiu la final pentru aspect estetic
+        if (pastTransactions.isEmpty()) {
+            JLabel noTransactionsLabel = new JLabel("Nu există tranzacții");
+            noTransactionsLabel.setFont(new Font("Dialog", Font.ITALIC, 14));
+            noTransactionsLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            pastTransactionPanel.add(noTransactionsLabel);
+        } else {
+            pastTransactionPanel.add(Box.createVerticalGlue());
+        }
+
         add(scrollPane);
     }
 
