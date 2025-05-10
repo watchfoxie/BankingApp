@@ -4,15 +4,13 @@ import db_objs.User;
 import db_objs.MyJDBC;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.Arrays;
 
 public class LoginGui extends BaseFrame {
     public LoginGui() {
         super("Aplicație bancara - Autentificare");
+        setLocationRelativeTo(null);
     }
 
     @Override
@@ -53,7 +51,7 @@ public class LoginGui extends BaseFrame {
                 char[] passwordChars = passwordField.getPassword();
                 String password = new String(passwordChars);
                 User user = MyJDBC.validateLogin(username, password);
-                Arrays.fill(passwordChars, '0'); // Curățare memorie
+                Arrays.fill(passwordChars, '0');
                 if (user != null) {
                     LoginGui.this.dispose();
                     BankingAppGui bankingAppGui = new BankingAppGui(user);
@@ -73,8 +71,11 @@ public class LoginGui extends BaseFrame {
         registerLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                Point location = LoginGui.this.getLocation();
                 LoginGui.this.dispose();
-                new RegisterGui().setVisible(true);
+                RegisterGui registerGui = new RegisterGui();
+                registerGui.setLocation(location);
+                registerGui.setVisible(true);
             }
         });
         add(registerLabel);
