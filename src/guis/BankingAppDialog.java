@@ -40,10 +40,10 @@ public class BankingAppDialog extends JDialog implements ActionListener {
     }
 
     /**
-     * Configurează mapării tastei Esc pentru închiderea dialogului
+     * Configurează maparea tastei Esc pentru închiderea dialogului
      */
     private void setupEscapeKeyMapping() {
-        // Obținem hărțile de intrare și acțiune pentru componenta rădăcină
+        // Obținerea hărților de intrare și acțiune pentru componenta rădăcină
         InputMap inputMap = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actionMap = getRootPane().getActionMap();
 
@@ -237,33 +237,95 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         String buttonPressed = e.getActionCommand();
         String amountText = enterAmountField.getText();
         float amountVal;
+
+        // Validarea pentru formatul sumei
         try {
+            // Verificarea pentru input-uri nevalide
+            if (amountText == null || amountText.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Suma nu poate fi goală.");
+                return;
+            }
+
+            // Verificarea dacă sunt doar cifre și un singur punct decimal
+            if (!amountText.matches("^\\d+(\\.\\d+)?$")) {
+                JOptionPane.showMessageDialog(this, "Suma trebuie să conțină doar cifre și eventual un punct pentru zecimale.");
+                return;
+            }
+
             amountVal = Float.parseFloat(amountText);
+
+            // Validarea pentru suma pozitivă
             if (amountVal <= 0) {
                 JOptionPane.showMessageDialog(this, "Suma trebuie să fie un număr pozitiv.");
                 return;
             }
+
+            // Validarea pentru suma maxima
+            final float MAX_AMOUNT = 1000000f;
+            if (amountVal > MAX_AMOUNT) {
+                JOptionPane.showMessageDialog(this, "Suma maximă permisă pentru o operațiune este de 1.000.000 MDL.");
+                return;
+            }
+
+            // Verificarea pentru valori prea mici care ar putea cauza probleme de precizie
+            if (amountVal < 0.01f) {
+                JOptionPane.showMessageDialog(this, "Suma minimă pentru o operațiune este de 0,01 MDL.");
+                return;
+            }
+
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Suma trebuie să fie un număr valid.");
             return;
         }
 
+        // Procesarea în funcție de tipul de operațiune
         if (buttonPressed.equalsIgnoreCase("Depozit")) {
+            // Verificarea dacă după depozit soldul nu depășește o valoare maximă rezonabilă
+            BigDecimal newBalance = user.getCurrentBalance().add(new BigDecimal(amountVal));
+            if (newBalance.compareTo(new BigDecimal("999999999999.99")) > 0) {
+                JOptionPane.showMessageDialog(this, "Depozitul ar duce soldul peste limita maximă permisă.");
+                return;
+            }
             handleTransaction(buttonPressed, amountVal);
         } else {
+            // Verificarea pentru sold suficient în cazul retragerilor și transferurilor
             int result = user.getCurrentBalance().compareTo(BigDecimal.valueOf(amountVal));
             if (result < 0) {
                 JOptionPane.showMessageDialog(this, "Eroare: Valoarea de intrare este mai mare decât soldul curent");
                 return;
             }
+
             if (buttonPressed.equalsIgnoreCase("Retragere")) {
                 handleTransaction(buttonPressed, amountVal);
             } else if (buttonPressed.equalsIgnoreCase("Transfer")) {
+                // Validarea pentru utilizatorul destinatar
                 String transferredUser = enterUserField.getText();
-                if (transferredUser.isEmpty() || !transferredUser.matches("[a-zA-Z0-9]+")) {
+
+                // Verificarea pentru câmp gol
+                if (transferredUser == null || transferredUser.trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Numele utilizatorului nu poate fi gol.");
+                    return;
+                }
+
+                // Verificarea pentru caractere permise
+                if (!transferredUser.matches("[a-zA-Z0-9]+")) {
                     JOptionPane.showMessageDialog(this, "Numele utilizatorului trebuie să conțină doar litere și cifre.");
                     return;
                 }
+
+                // Verificarea pentru lungimea câmpului
+                final int MAX_USERNAME_LENGTH = 50;
+                if (transferredUser.length() > MAX_USERNAME_LENGTH) {
+                    JOptionPane.showMessageDialog(this, "Numele utilizatorului nu poate depăși " + MAX_USERNAME_LENGTH + " caractere.");
+                    return;
+                }
+
+                // Verificarea pentru transfer către sine
+                if (transferredUser.equalsIgnoreCase(user.getUsername())) {
+                    JOptionPane.showMessageDialog(this, "Nu poți transfera bani către propriul cont.");
+                    return;
+                }
+
                 handleTransfer(user, transferredUser, amountVal);
             }
         }
