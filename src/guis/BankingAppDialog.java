@@ -8,6 +8,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
@@ -24,6 +25,7 @@ public class BankingAppDialog extends JDialog implements ActionListener {
     private ArrayList<Transaction> pastTransactions;
 
     public BankingAppDialog(BankingAppGui bankingAppGui, User user) {
+        super(bankingAppGui, true);
         setSize(400, 460);
         setModal(true);
         setLocationRelativeTo(bankingAppGui);
@@ -32,6 +34,30 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         setLayout(null);
         this.bankingAppGui = bankingAppGui;
         this.user = user;
+
+        // Adăugarea mapării tastei Esc imediat la crearea dialogului
+        setupEscapeKeyMapping();
+    }
+
+    /**
+     * Configurează mapării tastei Esc pentru închiderea dialogului
+     */
+    private void setupEscapeKeyMapping() {
+        // Obținem hărțile de intrare și acțiune pentru componenta rădăcină
+        InputMap inputMap = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = getRootPane().getActionMap();
+
+        // Definirea acțiunii pentru tasta Esc
+        KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+        inputMap.put(escapeKeyStroke, "closeDialog");
+
+        // Asocierea acțiunii cu metoda de închidere a dialogului
+        actionMap.put("closeDialog", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+            }
+        });
     }
 
     public void addCurrentBalanceAndAmount() {
@@ -60,6 +86,9 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         actionButton.setFont(new Font("Dialog", Font.BOLD, 20));
         actionButton.addActionListener(this);
         add(actionButton);
+
+        // Setarea butonului de acțiune ca buton implicit pentru tasta Enter
+        getRootPane().setDefaultButton(actionButton);
     }
 
     public void addUserField() {
@@ -77,20 +106,17 @@ public class BankingAppDialog extends JDialog implements ActionListener {
     }
 
     public void addPastTransactionComponents() {
-        // Titlul secțiunii de tranzacții
         JLabel titleLabel = new JLabel("Istoricul tranzacțiilor");
         titleLabel.setFont(new Font("Dialog", Font.BOLD, 18));
         titleLabel.setBounds(0, 10, getWidth() - 20, 25);
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         add(titleLabel);
 
-        // Creăm panoul principal pentru tranzacții
         pastTransactionPanel = new JPanel();
         pastTransactionPanel.setLayout(new BoxLayout(pastTransactionPanel, BoxLayout.Y_AXIS));
         pastTransactionPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         pastTransactionPanel.setBackground(new Color(245, 245, 245));
 
-        // Creăm panoul pentru scroll
         JScrollPane scrollPane = new JScrollPane(pastTransactionPanel);
         scrollPane.setBounds(15, 45, getWidth() - 40, getHeight() - 70);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -98,10 +124,8 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         scrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-        // Obținem tranzacțiile din baza de date
         pastTransactions = MyJDBC.getPastTransaction(user);
 
-        // Adăugăm un header pentru tranzacții
         JPanel headerPanel = new JPanel(new GridLayout(1, 3));
         headerPanel.setMaximumSize(new Dimension(scrollPane.getWidth() - 30, 30));
         headerPanel.setBackground(new Color(220, 220, 220));
@@ -123,18 +147,15 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         headerPanel.add(dateHeader);
         pastTransactionPanel.add(headerPanel);
 
-        // Adăugăm tranzacțiile în panou
         for (Transaction pastTransaction : pastTransactions) {
             JPanel transactionPanel = new JPanel(new GridLayout(1, 3));
             transactionPanel.setMaximumSize(new Dimension(scrollPane.getWidth() - 30, 40));
             transactionPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
 
-            // Formatăm tipul tranzacției
             JLabel typeLabel = new JLabel(pastTransaction.getTransactionType());
             typeLabel.setFont(new Font("Dialog", Font.PLAIN, 14));
             typeLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-            // Formatăm suma tranzacției cu culori diferite în funcție de tip
             JLabel amountLabel = new JLabel(String.valueOf(pastTransaction.getTransactionAmount()));
             amountLabel.setFont(new Font("Dialog", Font.PLAIN, 14));
             amountLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -145,7 +166,6 @@ public class BankingAppDialog extends JDialog implements ActionListener {
                 amountLabel.setForeground(new Color(0, 150, 0));
             }
 
-            // Formatăm data tranzacției
             JLabel dateLabel = new JLabel(String.valueOf(pastTransaction.getTransactionDate()));
             dateLabel.setFont(new Font("Dialog", Font.PLAIN, 14));
             dateLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -154,15 +174,12 @@ public class BankingAppDialog extends JDialog implements ActionListener {
             transactionPanel.add(amountLabel);
             transactionPanel.add(dateLabel);
 
-            // Adăugăm efect de hover (opțional, necesită MouseListener)
             transactionPanel.setBackground(Color.WHITE);
 
             pastTransactionPanel.add(transactionPanel);
-            // Adăugăm un mic spațiu între tranzacții
             pastTransactionPanel.add(Box.createRigidArea(new Dimension(0, 2)));
         }
 
-        // Adăugăm un spațiu la final pentru aspect estetic
         if (pastTransactions.isEmpty()) {
             JLabel noTransactionsLabel = new JLabel("Nu există tranzacții");
             noTransactionsLabel.setFont(new Font("Dialog", Font.ITALIC, 14));
@@ -173,6 +190,11 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         }
 
         add(scrollPane);
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
     }
 
     private void handleTransaction(String transactionType, float amountVal) {
