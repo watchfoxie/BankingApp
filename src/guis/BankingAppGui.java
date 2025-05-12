@@ -2,20 +2,66 @@ package guis;
 
 import db_objs.User;
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.text.DefaultCaret;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
+import java.util.Arrays;
+import java.util.List;
 
 public class BankingAppGui extends BaseFrame implements ActionListener {
     private JTextField currentBalanceField;
+    private List<JButton> operationalButtons;
+    private int currentFocusIndex = 0;
+    private CommandRouter commandRouter = new CommandRouter();
 
     public JTextField getCurrentBalanceField() {
         return currentBalanceField;
     }
 
     public BankingAppGui(User user) {
-        super("Aplicatie Bancara", user);
+        super("Aplicație Bancara", user);
+        setupCommands();
+    }
+
+    private void setupCommands() {
+        commandRouter.registerCommand("depozit", () -> {
+            BankingAppDialog dialog = new BankingAppDialog(this, user);
+            dialog.setTitle("Depozit");
+            dialog.addCurrentBalanceAndAmount();
+            dialog.addActionButton("Depozit");
+            dialog.setVisible(true);
+        });
+
+        commandRouter.registerCommand("retragere", () -> {
+            BankingAppDialog dialog = new BankingAppDialog(this, user);
+            dialog.setTitle("Retragere");
+            dialog.addCurrentBalanceAndAmount();
+            dialog.addActionButton("Retragere");
+            dialog.setVisible(true);
+        });
+
+        commandRouter.registerCommand("tranzacție anterioară", () -> {
+            BankingAppDialog dialog = new BankingAppDialog(this, user);
+            dialog.setTitle("Tranzacție Anterioară");
+            dialog.addPastTransactionComponents();
+            dialog.setVisible(true);
+        });
+
+        commandRouter.registerCommand("transfer", () -> {
+            BankingAppDialog dialog = new BankingAppDialog(this, user);
+            dialog.setTitle("Transfer");
+            dialog.addCurrentBalanceAndAmount();
+            dialog.addUserField();
+            dialog.addActionButton("Transfer");
+            dialog.setVisible(true);
+        });
+
+        commandRouter.registerCommand("ieșire", () -> {
+            user = null;
+            new LoginGui().setVisible(true);
+            this.dispose();
+        });
     }
 
     @Override
@@ -50,54 +96,128 @@ public class BankingAppGui extends BaseFrame implements ActionListener {
         depositButton.setBounds(15, 180, getWidth() - 50, 50);
         depositButton.setFont(new Font("Dialog", Font.BOLD, 22));
         depositButton.addActionListener(this);
+        depositButton.addMouseListener(new CustomMouseAdapter(depositButton));
+        depositButton.setToolTipText("Depuneți bani în cont");
         add(depositButton);
 
         JButton withdrawButton = new JButton("Retragere");
         withdrawButton.setBounds(15, 250, getWidth() - 50, 50);
         withdrawButton.setFont(new Font("Dialog", Font.BOLD, 22));
         withdrawButton.addActionListener(this);
+        withdrawButton.addMouseListener(new CustomMouseAdapter(withdrawButton));
+        withdrawButton.setToolTipText("Retrageți bani din cont");
         add(withdrawButton);
 
         JButton pastTransactionButton = new JButton("Tranzacție Anterioară");
         pastTransactionButton.setBounds(15, 320, getWidth() - 50, 50);
         pastTransactionButton.setFont(new Font("Dialog", Font.BOLD, 22));
         pastTransactionButton.addActionListener(this);
+        pastTransactionButton.addMouseListener(new CustomMouseAdapter(pastTransactionButton));
+        pastTransactionButton.setToolTipText("Vizualizați tranzacțiile anterioare");
         add(pastTransactionButton);
 
         JButton transferButton = new JButton("Transfer");
         transferButton.setBounds(15, 390, getWidth() - 50, 50);
         transferButton.setFont(new Font("Dialog", Font.BOLD, 22));
         transferButton.addActionListener(this);
+        transferButton.addMouseListener(new CustomMouseAdapter(transferButton));
+        transferButton.setToolTipText("Transferați bani către alt utilizator");
         add(transferButton);
 
         JButton logoutButton = new JButton("Ieșire");
         logoutButton.setBounds(15, 500, getWidth() - 50, 50);
         logoutButton.setFont(new Font("Dialog", Font.BOLD, 22));
         logoutButton.addActionListener(this);
+        logoutButton.addMouseListener(new CustomMouseAdapter(logoutButton));
+        logoutButton.setToolTipText("Ieșiți din aplicație");
         add(logoutButton);
+
+        operationalButtons = Arrays.asList(depositButton, withdrawButton, pastTransactionButton, transferButton, logoutButton);
+        for (JButton button : operationalButtons) {
+            button.addFocusListener(new ButtonFocusListener(button));
+        }
+
+        setupKeyboardNavigation();
+    }
+
+    private void setupKeyboardNavigation() {
+        InputMap inputMap = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = getRootPane().getActionMap();
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "nextButton");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "prevButton");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "pressButton");
+
+        actionMap.put("nextButton", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                currentFocusIndex = (currentFocusIndex + 1) % operationalButtons.size();
+                operationalButtons.get(currentFocusIndex).requestFocusInWindow();
+            }
+        });
+
+        actionMap.put("prevButton", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                currentFocusIndex = (currentFocusIndex - 1 + operationalButtons.size()) % operationalButtons.size();
+                operationalButtons.get(currentFocusIndex).requestFocusInWindow();
+            }
+        });
+
+        actionMap.put("pressButton", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                operationalButtons.get(currentFocusIndex).doClick();
+            }
+        });
+
+        operationalButtons.get(0).requestFocusInWindow();
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        String buttonPressed = e.getActionCommand();
-        if (buttonPressed.equalsIgnoreCase("Ieșire")) {
-            user = null; // Curățare referință utilizator
-            new LoginGui().setVisible(true);
-            this.dispose();
-            return;
+        String action = e.getActionCommand().toLowerCase();
+        commandRouter.executeCommand(action);
+    }
+
+    private static class CustomMouseAdapter extends MouseAdapter {
+        private final JButton button;
+        private final Color originalBackground;
+        private final Color hoverBackground = new Color(173, 216, 230);
+
+        public CustomMouseAdapter(JButton button) {
+            this.button = button;
+            this.originalBackground = button.getBackground();
         }
 
-        BankingAppDialog bankingAppDialog = new BankingAppDialog(this, user);
-        bankingAppDialog.setTitle(buttonPressed);
-        if (buttonPressed.equalsIgnoreCase("Depozit") || buttonPressed.equalsIgnoreCase("Retragere") || buttonPressed.equalsIgnoreCase("Transfer")) {
-            bankingAppDialog.addCurrentBalanceAndAmount();
-            bankingAppDialog.addActionButton(buttonPressed);
-            if (buttonPressed.equalsIgnoreCase("Transfer")) {
-                bankingAppDialog.addUserField();
-            }
-        } else if (buttonPressed.equalsIgnoreCase("Tranzacție Anterioară")) {
-            bankingAppDialog.addPastTransactionComponents();
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            button.setBackground(hoverBackground);
         }
-        bankingAppDialog.setVisible(true);
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+            button.setBackground(originalBackground);
+        }
+    }
+
+    private static class ButtonFocusListener implements FocusListener {
+        private final JButton button;
+        private final Border originalBorder;
+
+        public ButtonFocusListener(JButton button) {
+            this.button = button;
+            this.originalBorder = button.getBorder();
+        }
+
+        @Override
+        public void focusGained(FocusEvent e) {
+            button.setBorder(BorderFactory.createLineBorder(Color.BLUE, 2));
+        }
+
+        @Override
+        public void focusLost(FocusEvent e) {
+            button.setBorder(originalBorder);
+        }
     }
 }

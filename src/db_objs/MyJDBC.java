@@ -192,6 +192,19 @@ public class MyJDBC {
         return false;
     }
 
+    // Metodă pentru a adăuga o tranzacție folosind o conexiune existentă
+    private static boolean addTransactionToDatabase(Connection connection, Transaction transaction) throws SQLException {
+        PreparedStatement insertTransaction = connection.prepareStatement(
+                "INSERT transactions(user_id, transaction_type, transaction_amount, transaction_date) VALUES(?, ?, ?, NOW())"
+        );
+        insertTransaction.setInt(1, transaction.getUserId());
+        insertTransaction.setString(2, transaction.getTransactionType());
+        insertTransaction.setBigDecimal(3, transaction.getTransactionAmount());
+        insertTransaction.executeUpdate();
+        LOGGER.info("Tranzacție adăugată pentru user_id: " + transaction.getUserId());
+        return true;
+    }
+
     public static boolean updateCurrentBalance(User user) {
         try {
             Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
@@ -209,16 +222,38 @@ public class MyJDBC {
         return false;
     }
 
+    // Metodă pentru a actualiza soldul folosind o conexiune existentă
+    private static boolean updateCurrentBalance(Connection connection, User user) throws SQLException {
+        PreparedStatement updateBalance = connection.prepareStatement(
+                "UPDATE users SET current_balance = ? WHERE id = ?"
+        );
+        updateBalance.setBigDecimal(1, user.getCurrentBalance());
+        updateBalance.setInt(2, user.getId());
+        updateBalance.executeUpdate();
+        LOGGER.info("Sold actualizat pentru user_id: " + user.getId());
+        return true;
+    }
+
     public static boolean transfer(User user, String transferredUsername, float transferAmount) {
         Connection connection = null;
         try {
             connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
             connection.setAutoCommit(false);
-            PreparedStatement queryUser = connection.prepareStatement(
+
+            // Blocăm întâi utilizatorul curent (expeditor)
+            PreparedStatement querySourceUser = connection.prepareStatement(
+                    "SELECT * FROM users WHERE id = ? FOR UPDATE"
+            );
+            querySourceUser.setInt(1, user.getId());
+            querySourceUser.executeQuery();
+
+            // Apoi blocăm utilizatorul destinatar
+            PreparedStatement queryTargetUser = connection.prepareStatement(
                     "SELECT * FROM users WHERE username = ? FOR UPDATE"
             );
-            queryUser.setString(1, transferredUsername);
-            ResultSet resultSet = queryUser.executeQuery();
+            queryTargetUser.setString(1, transferredUsername);
+            ResultSet resultSet = queryTargetUser.executeQuery();
+
             if (resultSet.next()) {
                 User transferredUser = new User(
                         resultSet.getInt("id"),
@@ -226,24 +261,32 @@ public class MyJDBC {
                         resultSet.getString("password"),
                         resultSet.getBigDecimal("current_balance")
                 );
+
                 Transaction transferTransaction = new Transaction(
                         user.getId(),
                         "Transfer",
                         new BigDecimal(-transferAmount),
                         null
                 );
+
                 Transaction receivedTransaction = new Transaction(
                         transferredUser.getId(),
                         "Transfer",
                         new BigDecimal(transferAmount),
                         null
                 );
+
+                // Actualizăm soldurile
                 transferredUser.setCurrentBalance(transferredUser.getCurrentBalance().add(BigDecimal.valueOf(transferAmount)));
-                updateCurrentBalance(transferredUser);
+                updateCurrentBalance(connection, transferredUser);
+
                 user.setCurrentBalance(user.getCurrentBalance().subtract(BigDecimal.valueOf(transferAmount)));
-                updateCurrentBalance(user);
-                addTransactionToDatabase(transferTransaction);
-                addTransactionToDatabase(receivedTransaction);
+                updateCurrentBalance(connection, user);
+
+                // Adăugăm tranzacțiile
+                addTransactionToDatabase(connection, transferTransaction);
+                addTransactionToDatabase(connection, receivedTransaction);
+
                 connection.commit();
                 LOGGER.info("Transfer efectuat de la " + user.getUsername() + " la " + transferredUsername);
                 return true;
@@ -263,8 +306,9 @@ public class MyJDBC {
             if (connection != null) {
                 try {
                     connection.setAutoCommit(true);
+                    connection.close();
                 } catch (SQLException e) {
-                    LOGGER.log(Level.SEVERE, "Eroare la resetare auto-commit", e);
+                    LOGGER.log(Level.SEVERE, "Eroare la închiderea conexiunii", e);
                 }
             }
         }
