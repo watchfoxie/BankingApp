@@ -8,6 +8,8 @@ import java.awt.event.*;
 import java.util.Arrays;
 
 public class LoginGui extends BaseFrame {
+    private JButton loginButton;
+
     public LoginGui() {
         super("Aplicație bancara - Autentificare");
         setLocationRelativeTo(null);
@@ -41,7 +43,7 @@ public class LoginGui extends BaseFrame {
         passwordField.setFont(new Font("Dialog", Font.PLAIN, 28));
         add(passwordField);
 
-        JButton loginButton = new JButton("Autentificare");
+        loginButton = new JButton("Autentificare");
         loginButton.setBounds(20, 460, getWidth() - 50, 40);
         loginButton.setFont(new Font("Dialog", Font.BOLD, 20));
         loginButton.addActionListener(new ActionListener() {
@@ -63,6 +65,20 @@ public class LoginGui extends BaseFrame {
             }
         });
         add(loginButton);
+
+        // Setarea butonului de autentificare ca buton implicit pentru tasta Enter
+        getRootPane().setDefaultButton(loginButton);
+
+        // Adăugarea mapării tastei Esc pentru a închide fereastra
+        InputMap inputMap = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = getRootPane().getActionMap();
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
+        actionMap.put("close", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+            }
+        });
 
         JLabel registerLabel = new JLabel("<html><a href=\"#\">Nu aveți cont? Înregistrare</a></html>");
         registerLabel.setBounds(0, 510, getWidth() - 10, 30);

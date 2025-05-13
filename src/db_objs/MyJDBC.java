@@ -240,14 +240,14 @@ public class MyJDBC {
             connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
             connection.setAutoCommit(false);
 
-            // Blocăm întâi utilizatorul curent (expeditor)
+            // Blocarea utilizatorului curent (expeditor)
             PreparedStatement querySourceUser = connection.prepareStatement(
                     "SELECT * FROM users WHERE id = ? FOR UPDATE"
             );
             querySourceUser.setInt(1, user.getId());
             querySourceUser.executeQuery();
 
-            // Apoi blocăm utilizatorul destinatar
+            // Blocarea utilizatorului destinatar
             PreparedStatement queryTargetUser = connection.prepareStatement(
                     "SELECT * FROM users WHERE username = ? FOR UPDATE"
             );
@@ -276,14 +276,14 @@ public class MyJDBC {
                         null
                 );
 
-                // Actualizăm soldurile
+                // Actualizarea soldurilor
                 transferredUser.setCurrentBalance(transferredUser.getCurrentBalance().add(BigDecimal.valueOf(transferAmount)));
                 updateCurrentBalance(connection, transferredUser);
 
                 user.setCurrentBalance(user.getCurrentBalance().subtract(BigDecimal.valueOf(transferAmount)));
                 updateCurrentBalance(connection, user);
 
-                // Adăugăm tranzacțiile
+                // Adăugarea tranzacțiilor
                 addTransactionToDatabase(connection, transferTransaction);
                 addTransactionToDatabase(connection, receivedTransaction);
 
