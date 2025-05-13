@@ -1,13 +1,13 @@
 <component name="ArtifactManager">
-  <artifact type="jar" build-on-make="true" name="BankingApp:jar">
+  <artifact type="jar" name="BankingApp:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/BankingApp_jar</output-path>
     <root id="archive" name="BankingApp.jar">
       <element id="directory" name="META-INF">
         <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
       </element>
       <element id="module-output" name="BankingApp" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jbcrypt-0.4.7.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/mysql-connector-j-9.1.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jbcrypt-0.4.7.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>
