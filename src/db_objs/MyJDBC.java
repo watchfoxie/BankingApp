@@ -5,6 +5,7 @@ import de.svws_nrw.ext.jbcrypt.BCrypt;
 import javax.swing.*;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
@@ -19,16 +20,23 @@ public class MyJDBC {
     private static String DB_PASSWORD;
 
     static {
-        try {
+        try (InputStream input = MyJDBC.class.getClassLoader().getResourceAsStream("config.properties")) {
+            if (input == null) {
+                throw new IOException("Fișierul config.properties nu a fost găsit în classpath!");
+            }
+
             Properties props = new Properties();
-            props.load(new FileInputStream("src/config.properties"));
+            props.load(input);
+
             DB_URL = props.getProperty("db.url");
             DB_USERNAME = props.getProperty("db.username");
             DB_PASSWORD = props.getProperty("db.password");
+
             createDatabaseIfNotExists();
             createTablesIfNotExists();
         } catch (IOException | SQLException e) {
             LOGGER.log(Level.SEVERE, "Eroare la inițializare", e);
+            throw new RuntimeException("Eroare critică la inițializarea bazei de date", e);
         }
     }
 
