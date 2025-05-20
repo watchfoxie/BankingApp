@@ -77,6 +77,8 @@ public class MyJDBC {
                         "transaction_date DATETIME NOT NULL, " +
                         "transaction_type VARCHAR(45) NOT NULL, " +
                         "user_id INT NOT NULL, " +
+                        "sender_username VARCHAR(45) NULL, " +
+                        "recipient_username VARCHAR(45) NULL, " +
                         "PRIMARY KEY (id), " +
                         "INDEX user_id_idx (user_id ASC) VISIBLE, " +
                         "CONSTRAINT user_id " +
@@ -186,11 +188,14 @@ public class MyJDBC {
         try {
             Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
             PreparedStatement insertTransaction = connection.prepareStatement(
-                    "INSERT transactions(user_id, transaction_type, transaction_amount, transaction_date) VALUES(?, ?, ?, NOW())"
+                    "INSERT transactions(user_id, transaction_type, transaction_amount, transaction_date, sender_username, recipient_username) " +
+                            "VALUES(?, ?, ?, NOW(), ?, ?)"
             );
             insertTransaction.setInt(1, transaction.getUserId());
             insertTransaction.setString(2, transaction.getTransactionType());
             insertTransaction.setBigDecimal(3, transaction.getTransactionAmount());
+            insertTransaction.setString(4, transaction.getSenderUsername());
+            insertTransaction.setString(5, transaction.getRecipientUsername());
             insertTransaction.executeUpdate();
             LOGGER.info("Tranzacție adăugată pentru user_id: " + transaction.getUserId());
             return true;
@@ -203,11 +208,14 @@ public class MyJDBC {
     // Metodă pentru a adăuga o tranzacție folosind o conexiune existentă
     private static boolean addTransactionToDatabase(Connection connection, Transaction transaction) throws SQLException {
         PreparedStatement insertTransaction = connection.prepareStatement(
-                "INSERT transactions(user_id, transaction_type, transaction_amount, transaction_date) VALUES(?, ?, ?, NOW())"
+                "INSERT transactions(user_id, transaction_type, transaction_amount, transaction_date, sender_username, recipient_username) " +
+                        "VALUES(?, ?, ?, NOW(), ?, ?)"
         );
         insertTransaction.setInt(1, transaction.getUserId());
         insertTransaction.setString(2, transaction.getTransactionType());
         insertTransaction.setBigDecimal(3, transaction.getTransactionAmount());
+        insertTransaction.setString(4, transaction.getSenderUsername());
+        insertTransaction.setString(5, transaction.getRecipientUsername());
         insertTransaction.executeUpdate();
         LOGGER.info("Tranzacție adăugată pentru user_id: " + transaction.getUserId());
         return true;
@@ -274,14 +282,18 @@ public class MyJDBC {
                         user.getId(),
                         "Transfer",
                         new BigDecimal(-transferAmount),
-                        null
+                        null,
+                        user.getUsername(),
+                        transferredUsername
                 );
 
                 Transaction receivedTransaction = new Transaction(
                         transferredUser.getId(),
                         "Transfer",
                         new BigDecimal(transferAmount),
-                        null
+                        null,
+                        user.getUsername(),
+                        transferredUsername
                 );
 
                 // Actualizarea soldurilor
@@ -337,7 +349,9 @@ public class MyJDBC {
                         user.getId(),
                         resultSet.getString("transaction_type"),
                         resultSet.getBigDecimal("transaction_amount"),
-                        resultSet.getDate("transaction_date")
+                        resultSet.getDate("transaction_date"),
+                        resultSet.getString("sender_username"),
+                        resultSet.getString("recipient_username")
                 );
                 pastTransactions.add(transaction);
             }

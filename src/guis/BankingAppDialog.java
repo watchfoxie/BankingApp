@@ -176,6 +176,10 @@ public class BankingAppDialog extends JDialog implements ActionListener {
 
             transactionPanel.setBackground(Color.WHITE);
 
+            // Adăugarea unui tooltip bazat pe tipul de tranzacție
+            String tooltipText = generateTooltipText(pastTransaction);
+            transactionPanel.setToolTipText(tooltipText);
+
             pastTransactionPanel.add(transactionPanel);
             pastTransactionPanel.add(Box.createRigidArea(new Dimension(0, 2)));
         }
@@ -190,6 +194,28 @@ public class BankingAppDialog extends JDialog implements ActionListener {
         }
 
         add(scrollPane);
+    }
+
+    private String generateTooltipText(Transaction transaction) {
+        String transactionType = transaction.getTransactionType();
+        switch (transactionType) {
+            case "Depozit":
+                return "Depunător: " + user.getUsername();
+            case "Retragere":
+                return "Beneficiar: " + user.getUsername();
+            case "Transfer":
+                if (transaction.getTransactionAmount().compareTo(BigDecimal.ZERO) < 0) {
+                    // Suma negativă înseamnă transfer de ieșire
+                    return "Ordinator: " + transaction.getSenderUsername() +
+                            ", Beneficiar: " + transaction.getRecipientUsername();
+                } else {
+                    // Suma pozitivă înseamnă transfer de intrare
+                    return "Ordinator: " + transaction.getSenderUsername() +
+                            ", Beneficiar: " + transaction.getRecipientUsername();
+                }
+            default:
+                return "Tranzacție: " + transactionType;
+        }
     }
 
     @Override

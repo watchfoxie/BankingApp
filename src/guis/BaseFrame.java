@@ -27,7 +27,7 @@ public abstract class BaseFrame extends JFrame {
         setTitle(title);
 
         // Setează dimensiunea (în pixeli)
-        setSize(420, 600);
+        setSize(420, 630);
 
         // Terminarea programului atunci când GUI este închis
         setDefaultCloseOperation(EXIT_ON_CLOSE);

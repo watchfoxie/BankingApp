@@ -42,18 +42,28 @@ public class RegisterGui extends BaseFrame {
         passwordField.setFont(new Font("Dialog", Font.PLAIN, 28));
         add(passwordField);
 
+        JLabel passwordRulesLabel = new JLabel("<html>Parola trebuie să:<br>" +
+                "- Conțină 6-24 caractere<br>" +
+                "- Conțină cel puțin o literă mare<br>" +
+                "- Conțină cel puțin o literă mică<br>" +
+                "- Conțină cel puțin o cifră<br>" +
+                "- NU conțină caractere speciale</html>");
+        passwordRulesLabel.setBounds(20, 300, getWidth() - 50, 100);
+        passwordRulesLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
+        add(passwordRulesLabel);
+
         JLabel rePasswordLabel = new JLabel("Repetați parola:");
-        rePasswordLabel.setBounds(20, 320, getWidth() - 50, 40);
+        rePasswordLabel.setBounds(20, 400, getWidth() - 50, 40);
         rePasswordLabel.setFont(new Font("Dialog", Font.PLAIN, 20));
         add(rePasswordLabel);
 
         JPasswordField rePasswordField = new JPasswordField();
-        rePasswordField.setBounds(20, 360, getWidth() - 50, 40);
+        rePasswordField.setBounds(20, 440, getWidth() - 50, 40);
         rePasswordField.setFont(new Font("Dialog", Font.PLAIN, 28));
         add(rePasswordField);
 
         registerButton = new JButton("Înregistrare");
-        registerButton.setBounds(20, 460, getWidth() - 50, 40);
+        registerButton.setBounds(20, 500, getWidth() - 50, 40);
         registerButton.setFont(new Font("Dialog", Font.BOLD, 20));
         registerButton.addActionListener(new ActionListener() {
             @Override
@@ -63,7 +73,9 @@ public class RegisterGui extends BaseFrame {
                 char[] rePasswordChars = rePasswordField.getPassword();
                 String password = new String(passwordChars);
                 String rePassword = new String(rePasswordChars);
-                if (validateUserInput(username, password, rePassword)) {
+
+                String validationError = validateUserInput(username, password, rePassword);
+                if (validationError == null) {
                     if (MyJDBC.register(username, password)) {
                         RegisterGui.this.dispose();
                         LoginGui loginGui = new LoginGui();
@@ -73,9 +85,7 @@ public class RegisterGui extends BaseFrame {
                         JOptionPane.showMessageDialog(RegisterGui.this, "Eroare: Utilizator deja înregistrat!");
                     }
                 } else {
-                    JOptionPane.showMessageDialog(RegisterGui.this,
-                            "Eroare: Numele de utilizator trebuie să aibă cel puțin 6 caractere\n" +
-                                    "și/sau parola trebuie să corespundă pentru ambele casete");
+                    JOptionPane.showMessageDialog(RegisterGui.this, validationError, "Eroare la înregistrare", JOptionPane.ERROR_MESSAGE);
                 }
                 Arrays.fill(passwordChars, '0');
                 Arrays.fill(rePasswordChars, '0');
@@ -98,7 +108,7 @@ public class RegisterGui extends BaseFrame {
         });
 
         JLabel loginLabel = new JLabel("<html><a href=\"#\">Aveți cont? Autentificare</a></html>");
-        loginLabel.setBounds(0, 510, getWidth() - 10, 30);
+        loginLabel.setBounds(0, 550, getWidth() - 10, 30);
         loginLabel.setFont(new Font("Dialog", Font.PLAIN, 20));
         loginLabel.setHorizontalAlignment(SwingConstants.CENTER);
         loginLabel.addMouseListener(new MouseAdapter() {
@@ -114,10 +124,47 @@ public class RegisterGui extends BaseFrame {
         add(loginLabel);
     }
 
-    private boolean validateUserInput(String username, String password, String rePassword) {
-        if (username.length() == 0 || password.length() == 0 || rePassword.length() == 0) return false;
-        if (username.length() < 6) return false;
-        if (!password.equals(rePassword)) return false;
-        return true;
+    private String validateUserInput(String username, String password, String rePassword) {
+        // Validate username
+        if (username.isEmpty() || password.isEmpty() || rePassword.isEmpty()) {
+            return "Toate câmpurile sunt obligatorii!";
+        }
+
+        if (username.length() < 6) {
+            return "Numele de utilizator trebuie să aibă cel puțin 6 caractere!";
+        }
+
+        // Validate password match
+        if (!password.equals(rePassword)) {
+            return "Parolele nu coincid!";
+        }
+
+        // Validate password length
+        if (password.length() < 6 || password.length() > 24) {
+            return "Parola trebuie să aibă între 6 și 24 de caractere!";
+        }
+
+        // Check for at least one uppercase letter
+        if (!password.matches(".*[A-Z].*")) {
+            return "Parola trebuie să conțină cel puțin o literă mare!";
+        }
+
+        // Check for at least one lowercase letter
+        if (!password.matches(".*[a-z].*")) {
+            return "Parola trebuie să conțină cel puțin o literă mică!";
+        }
+
+        // Check for at least one digit
+        if (!password.matches(".*\\d.*")) {
+            return "Parola trebuie să conțină cel puțin o cifră!";
+        }
+
+        // Check for special characters (not allowed)
+        if (!password.matches("^[a-zA-Z0-9]*$")) {
+            return "Parola nu poate conține caractere speciale!";
+        }
+
+        // All validations passed
+        return null;
     }
 }

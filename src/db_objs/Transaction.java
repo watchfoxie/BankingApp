@@ -12,12 +12,21 @@ public class Transaction {
     private final String transactionType;
     private final BigDecimal transactionAmount;
     private final Date transactionDate;
+    private final String senderUsername;
+    private final String recipientUsername;
 
-    public Transaction(int userId, String transactionType, BigDecimal transactionAmount, Date transactionDate){
+    public Transaction(int userId, String transactionType, BigDecimal transactionAmount, Date transactionDate) {
+        this(userId, transactionType, transactionAmount, transactionDate, null, null);
+    }
+
+    public Transaction(int userId, String transactionType, BigDecimal transactionAmount, Date transactionDate,
+                       String senderUsername, String recipientUsername) {
         this.userId = userId;
         this.transactionType = transactionType;
         this.transactionAmount = transactionAmount;
         this.transactionDate = transactionDate;
+        this.senderUsername = senderUsername;
+        this.recipientUsername = recipientUsername;
     }
 
     public int getUserId() {
@@ -34,5 +43,13 @@ public class Transaction {
 
     public Date getTransactionDate() {
         return transactionDate;
+    }
+
+    public String getSenderUsername() {
+        return senderUsername;
+    }
+
+    public String getRecipientUsername() {
+        return recipientUsername;
     }
 }
